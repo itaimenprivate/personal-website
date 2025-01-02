@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Take Profile Photo</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 20px;
+        }
+        #camera-container {
+            margin: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        #video, #canvas {
+            width: 640px;
+            height: 480px;
+            background: #000;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        #download-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="camera-container">
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas" style="display:none;"></canvas>
+    </div>
+    <button id="capture">Take Photo</button>
+    <div id="download-container"></div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureButton = document.getElementById('capture');
+        const downloadContainer = document.getElementById('download-container');
+        const context = canvas.getContext('2d');
+
+        // Access webcam
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error('Error accessing camera:', err);
+                alert('Error accessing camera. Please make sure you have granted camera permissions.');
+            });
+
+        // Capture photo
+        captureButton.addEventListener('click', () => {
+            // Draw video frame to canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Convert to image
+            const image = canvas.toDataURL('image/jpeg');
+            
+            // Create download link
+            const downloadLink = document.createElement('a');
+            downloadLink.href = image;
+            downloadLink.download = 'profile-photo.jpeg';
+            downloadLink.innerHTML = `
+                <img src="${image}" style="max-width: 200px; border-radius: 50%; margin: 10px;">
+                <br>
+                <button>Download Photo</button>
+            `;
+            
+            // Clear previous photos
+            downloadContainer.innerHTML = '';
+            downloadContainer.appendChild(downloadLink);
+        });
+    </script>
+</body>
+</html>
