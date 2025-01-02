@@ -43,27 +43,14 @@ transporter.verify(function(error, success) {
 
 // API endpoint for sending emails
 app.post('/send-email', async (req, res) => {
-    const { name, email, message } = req.body;
-
     try {
-        console.log('Attempting to send email with config:', {
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: '****'
-            }
-        });
+        const { name, email, subject, message } = req.body;
         
-        await transporter.sendMail({
+        const mailOptions = {
             from: process.env.EMAIL_USER,
-            to: process.env.EMAIL_USER,
-            subject: `New Message from ${name}`,
-            text: `
-Name: ${name}
-Email: ${email}
-
-Message:
-${message}
-            `,
+            to: process.env.EMAIL_USER, 
+            subject: subject || `New message from ${name}`,
+            text: `From: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
             html: `
 <h3>New Contact Form Submission</h3>
 <p><strong>Name:</strong> ${name}</p>
@@ -71,7 +58,16 @@ ${message}
 <p><strong>Message:</strong></p>
 <p>${message}</p>
             `
+        };
+
+        console.log('Attempting to send email with config:', {
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: '****'
+            }
         });
+        
+        await transporter.sendMail(mailOptions);
 
         console.log('Email sent successfully');
         res.json({ success: true, message: 'Email sent successfully!' });
