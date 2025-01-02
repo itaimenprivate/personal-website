@@ -14,12 +14,30 @@ app.use(express.static(path.join(__dirname)));
 
 // Email transporter
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
+    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
     secure: false,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        rejectUnauthorized: true
+    }
+});
+
+// Verify the connection configuration
+transporter.verify(function(error, success) {
+    if (error) {
+        console.error('SMTP connection error:', {
+            message: error.message,
+            code: error.code,
+            command: error.command,
+            response: error.response
+        });
+    } else {
+        console.log('Server is ready to send emails');
     }
 });
 
@@ -28,6 +46,13 @@ app.post('/send-email', async (req, res) => {
     const { name, email, message } = req.body;
 
     try {
+        console.log('Attempting to send email with config:', {
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: '****'
+            }
+        });
+        
         await transporter.sendMail({
             from: process.env.EMAIL_USER,
             to: process.env.EMAIL_USER,
@@ -48,10 +73,21 @@ ${message}
             `
         });
 
+        console.log('Email sent successfully');
         res.json({ success: true, message: 'Email sent successfully!' });
     } catch (error) {
-        console.error('Error sending email:', error);
-        res.status(500).json({ success: false, message: 'Failed to send email' });
+        console.error('Detailed error sending email:', {
+            error: error.message,
+            code: error.code,
+            command: error.command,
+            responseCode: error.responseCode,
+            response: error.response
+        });
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to send email',
+            error: error.message 
+        });
     }
 });
 
