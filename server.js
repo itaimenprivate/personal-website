@@ -10,7 +10,13 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+
+// Serve static files from the root directory
+app.use(express.static(path.join(__dirname)));
+
+// Serve static files for styles and images
+app.use('/styles', express.static(path.join(__dirname, 'styles')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // Email transporter
 const transporter = nodemailer.createTransport({
@@ -104,15 +110,10 @@ app.post('/send-email', async (req, res) => {
     }
 });
 
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static('public'));
-    
-    // Handle React routing, return all requests to index.html
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, 'index.html'));
-    });
-}
+// Serve index.html for all routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // Only start the server if this file is run directly
 if (require.main === module) {
