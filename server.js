@@ -6,13 +6,11 @@ const { isValidEmail } = require('./validation');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Serve static files from the root directory
 app.use(express.static(path.join(__dirname)));
 
 // Serve static files for styles and images
@@ -106,8 +104,8 @@ app.get('*', (req, res) => {
 
 // Only start the server if this file is run directly
 if (require.main === module) {
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+    app.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
     });
 }
 
