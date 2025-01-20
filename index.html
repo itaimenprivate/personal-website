@@ -151,7 +151,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const form = document.querySelector('form');
+            const form = document.getElementById('contact-form');
             const emailInput = document.getElementById('email');
             
             // Custom email validation function
@@ -160,10 +160,11 @@
                 return emailRegex.test(email);
             }
 
-            // Add custom validation
+            // Add real-time validation feedback
             emailInput.addEventListener('input', function() {
-                if (!isValidEmail(this.value)) {
+                if (!isValidEmail(this.value) && this.value) {
                     this.setCustomValidity('Please enter a valid email address');
+                    this.reportValidity();
                 } else {
                     this.setCustomValidity('');
                 }
@@ -173,18 +174,13 @@
                 e.preventDefault();
                 
                 const name = document.getElementById('name').value;
-                const email = document.getElementById('email').value;
+                const email = emailInput.value;
                 const message = document.getElementById('message').value;
-
-                // Validate all required fields
-                if (!name || !email || !message) {
-                    alert('Please fill in all required fields');
-                    return;
-                }
 
                 // Validate email format
                 if (!isValidEmail(email)) {
-                    alert('Please enter a valid email address');
+                    emailInput.setCustomValidity('Please enter a valid email address');
+                    emailInput.reportValidity();
                     return;
                 }
 
@@ -194,14 +190,14 @@
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ name, email, message }),
+                        body: JSON.stringify({ name, email, message })
                     });
 
                     const data = await response.json();
 
                     if (data.success) {
-                        alert('Message sent successfully!');
                         form.reset();
+                        alert('Message sent successfully!');
                     } else {
                         alert(data.message || 'Failed to send message');
                     }
