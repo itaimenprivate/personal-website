@@ -11,23 +11,39 @@ describe('Frontend Form Validation', () => {
     let emailInput;
 
     beforeEach(() => {
-        // Set up our document body
-        const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
+        // Set up our document body with minimal HTML
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <body>
+                <form id="contact-form">
+                    <input type="text" id="name" name="name" required>
+                    <input type="email" id="email" name="email" required>
+                    <textarea id="message" name="message" required></textarea>
+                    <button type="submit">Send</button>
+                </form>
+            </body>
+            </html>
+        `;
+
+        // Configure JSDOM to not try to load external resources
         dom = new JSDOM(html, {
             runScripts: 'dangerously',
             resources: 'usable',
-            url: 'http://localhost'
+            url: 'http://localhost',
+            features: {
+                FetchExternalResources: false,
+                ProcessExternalResources: false
+            }
         });
+
         document = dom.window.document;
         window = dom.window;
 
-        // Mock validation functions
+        // Mock validation functions directly
         window.isValidEmail = isValidEmail;
 
-        // Get form elements after DOMContentLoaded
-        const event = new window.Event('DOMContentLoaded');
-        window.document.dispatchEvent(event);
-        
+        // Get form elements
         form = document.getElementById('contact-form');
         emailInput = document.getElementById('email');
 
@@ -39,6 +55,15 @@ describe('Frontend Form Validation', () => {
             };
         };
         emailInput.reportValidity = jest.fn();
+
+        // Trigger validation setup
+        const event = new window.Event('DOMContentLoaded');
+        window.document.dispatchEvent(event);
+    });
+
+    afterEach(() => {
+        // Clean up
+        dom.window.close();
     });
 
     // Valid email test cases
@@ -81,12 +106,12 @@ describe('Frontend Form Validation', () => {
         });
     });
 
-    // Test form submission
+    // Test form validation
     it('should prevent form submission with invalid email', () => {
         const invalidEmail = '.user@domain.com';
         emailInput.value = invalidEmail;
         
-        const event = new window.Event('submit');
+        const event = new window.Event('submit', { cancelable: true });
         form.dispatchEvent(event);
         
         expect(isValidEmail(invalidEmail)).toBe(false);

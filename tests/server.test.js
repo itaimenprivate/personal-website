@@ -12,7 +12,10 @@ describe('Email API Endpoints', () => {
     beforeEach(() => {
         // Setup mock for each test
         mockSendMail = jest.fn().mockResolvedValue({ response: 'Email sent' });
-        nodemailer.createTransport.mockReturnValue({ sendMail: mockSendMail });
+        nodemailer.createTransport = jest.fn().mockReturnValue({
+            sendMail: mockSendMail,
+            verify: jest.fn().mockImplementation(cb => cb(null, true))
+        });
     });
 
     afterEach(() => {
@@ -43,7 +46,7 @@ describe('Email API Endpoints', () => {
 
                 expect(response.status).toBe(200);
                 expect(response.body.success).toBe(true);
-                expect(mockSendMail).toHaveBeenCalled();
+                expect(mockSendMail).toHaveBeenCalledTimes(1);
             });
         });
 
@@ -77,6 +80,7 @@ describe('Email API Endpoints', () => {
                 expect(response.status).toBe(400);
                 expect(response.body.success).toBe(false);
                 expect(response.body.message).toContain('Invalid email format');
+                expect(mockSendMail).not.toHaveBeenCalled();
             });
         });
 
@@ -92,17 +96,24 @@ describe('Email API Endpoints', () => {
             expect(response.status).toBe(400);
             expect(response.body.success).toBe(false);
             expect(response.body.message).toContain('required fields');
+            expect(mockSendMail).not.toHaveBeenCalled();
         });
 
-        it('should handle server errors gracefully', async () => {
-            // Force an error by sending invalid data type
+        it('should handle email service errors', async () => {
+            mockSendMail.mockRejectedValueOnce(new Error('SMTP error'));
+
             const response = await request(app)
                 .post('/send-email')
-                .send(null);
+                .send({
+                    name: 'Test User',
+                    email: 'valid@email.com',
+                    message: 'Test message'
+                });
 
             expect(response.status).toBe(500);
             expect(response.body.success).toBe(false);
-            expect(response.body.message).toBeTruthy();
+            expect(response.body.message).toBe('Failed to send email');
+            expect(mockSendMail).toHaveBeenCalledTimes(1);
         });
     });
 });
