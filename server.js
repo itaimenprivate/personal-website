@@ -17,34 +17,42 @@ app.use(express.static(path.join(__dirname)));
 app.use('/styles', express.static(path.join(__dirname, 'styles')));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-// Email transporter
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: true
-    }
-});
+// Create reusable transporter object using SMTP transport
+const createTransporter = () => {
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+        },
+        tls: {
+            rejectUnauthorized: true
+        }
+    });
 
-// Verify the connection configuration
-transporter.verify(function(error, success) {
-    if (error) {
-        console.error('SMTP connection error:', {
-            message: error.message,
-            code: error.code,
-            command: error.command,
-            response: error.response
+    // Verify the connection configuration
+    if (process.env.NODE_ENV !== 'test') {
+        transporter.verify((error, success) => {
+            if (error) {
+                console.error('SMTP connection error:', {
+                    message: error.message,
+                    code: error.code,
+                    command: error.command,
+                    response: error.response
+                });
+            } else {
+                console.log('Server is ready to send emails');
+            }
         });
-    } else {
-        console.log('Server is ready to send emails');
     }
-});
+
+    return transporter;
+};
+
+let transporter = createTransporter();
 
 // API endpoint for sending emails
 app.post('/send-email', async (req, res) => {

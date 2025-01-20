@@ -1,25 +1,29 @@
 const request = require('supertest');
 const nodemailer = require('nodemailer');
+
+// Mock nodemailer before requiring the app
+jest.mock('nodemailer');
+
+// Setup nodemailer mock
+const mockSendMail = jest.fn().mockResolvedValue({ response: 'Email sent' });
+const mockTransporter = {
+    sendMail: mockSendMail,
+    verify: jest.fn().mockImplementation(cb => cb(null, true))
+};
+nodemailer.createTransport.mockReturnValue(mockTransporter);
+
+// Set test environment
+process.env.NODE_ENV = 'test';
+
+// Now require the app
 const app = require('../server');
 const { isValidEmail } = require('../validation');
 
-// Mock nodemailer
-jest.mock('nodemailer');
-
 describe('Email API Endpoints', () => {
-    let mockSendMail;
-
     beforeEach(() => {
-        // Setup mock for each test
-        mockSendMail = jest.fn().mockResolvedValue({ response: 'Email sent' });
-        nodemailer.createTransport = jest.fn().mockReturnValue({
-            sendMail: mockSendMail,
-            verify: jest.fn().mockImplementation(cb => cb(null, true))
-        });
-    });
-
-    afterEach(() => {
+        // Clear mock data before each test
         jest.clearAllMocks();
+        mockSendMail.mockClear();
     });
 
     describe('POST /send-email', () => {
