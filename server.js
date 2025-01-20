@@ -60,8 +60,8 @@ app.post('/send-email', async (req, res) => {
             });
         }
 
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        // Validate email format with strict rules
+        const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z]{2,})+$/;
         if (!emailRegex.test(email)) {
             return res.status(400).json({ 
                 success: false, 

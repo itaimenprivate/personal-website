@@ -62,16 +62,10 @@ describe('Contact Form Functionality', () => {
         });
 
         // Extract the isValidEmail function from the script
-        const scriptContent = `
-            function isValidEmail(email) {
-                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-                return emailRegex.test(email);
-            }
-        `;
-        isValidEmail = new Function('email', `
-            ${scriptContent}
-            return isValidEmail(email);
-        `);
+        isValidEmail = (email) => {
+            const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z]{2,})+$/;
+            return emailRegex.test(email);
+        };
     });
 
     afterEach(() => {
