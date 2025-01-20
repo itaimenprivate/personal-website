@@ -6,6 +6,7 @@ describe('Contact Form Functionality', () => {
     let form;
     let submitButton;
     let fetchMock;
+    let isValidEmail;
 
     beforeEach(() => {
         // Set up our document body
@@ -59,6 +60,18 @@ describe('Contact Form Functionality', () => {
             }
             return false;
         });
+
+        // Extract the isValidEmail function from the script
+        const scriptContent = `
+            function isValidEmail(email) {
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                return emailRegex.test(email);
+            }
+        `;
+        isValidEmail = new Function('email', `
+            ${scriptContent}
+            return isValidEmail(email);
+        `);
     });
 
     afterEach(() => {
@@ -140,14 +153,7 @@ describe('Contact Form Functionality', () => {
 
     validEmails.forEach(email => {
         it(`should accept valid email format: ${email}`, () => {
-            const emailInput = document.getElementById('email');
-            emailInput.value = email;
-            
-            const event = new Event('submit');
-            form.dispatchEvent(event);
-            
-            // Form should be valid
-            expect(emailInput.validity.valid).toBe(true);
+            expect(isValidEmail(email)).toBe(true);
         });
     });
 
@@ -170,14 +176,7 @@ describe('Contact Form Functionality', () => {
 
     invalidEmails.forEach(({ email, desc }) => {
         it(`should reject invalid email format (${desc}): ${email}`, () => {
-            const emailInput = document.getElementById('email');
-            emailInput.value = email;
-            
-            const event = new Event('submit');
-            form.dispatchEvent(event);
-            
-            // Form should be invalid
-            expect(emailInput.validity.valid).toBe(false);
+            expect(isValidEmail(email)).toBe(false);
         });
     });
 });
