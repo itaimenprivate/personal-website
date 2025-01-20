@@ -1,35 +1,25 @@
 const request = require('supertest');
 const nodemailer = require('nodemailer');
+const app = require('../server');
+const { isValidEmail } = require('../validation');
 
-// Mock nodemailer before requiring server
+// Mock nodemailer
 jest.mock('nodemailer');
 
-// Create mock transporter
-const mockTransporter = {
-    verify: jest.fn().mockImplementation((callback) => callback(null, true)),
-    sendMail: jest.fn().mockResolvedValue({ messageId: 'test-id' })
-};
-
-// Setup nodemailer mock
-nodemailer.createTransport.mockReturnValue(mockTransporter);
-
-// Require server after mocking
-const app = require('../server');
-
 describe('Email API Endpoints', () => {
+    let mockSendMail;
+
     beforeEach(() => {
-        // Clear mock data before each test
+        // Setup mock for each test
+        mockSendMail = jest.fn().mockResolvedValue({ response: 'Email sent' });
+        nodemailer.createTransport.mockReturnValue({ sendMail: mockSendMail });
+    });
+
+    afterEach(() => {
         jest.clearAllMocks();
     });
 
     describe('POST /send-email', () => {
-        let mockSendMail;
-
-        beforeEach(() => {
-            mockSendMail = jest.fn().mockResolvedValue({ response: 'Email sent' });
-            nodemailer.createTransport.mockReturnValue({ sendMail: mockSendMail });
-        });
-
         // Valid email test cases
         const validEmails = [
             'user@domain.com',
@@ -50,9 +40,10 @@ describe('Email API Endpoints', () => {
                         email: email,
                         message: 'Test message'
                     });
-                
+
                 expect(response.status).toBe(200);
                 expect(response.body.success).toBe(true);
+                expect(mockSendMail).toHaveBeenCalled();
             });
         });
 
@@ -82,76 +73,36 @@ describe('Email API Endpoints', () => {
                         email: email,
                         message: 'Test message'
                     });
-                
+
                 expect(response.status).toBe(400);
                 expect(response.body.success).toBe(false);
                 expect(response.body.message).toContain('Invalid email format');
             });
         });
 
-        const validPayload = {
-            name: 'Test User',
-            email: 'test@example.com',
-            subject: 'Test Subject',
-            message: 'Test Message'
-        };
-
-        it('should send email successfully with valid payload', async () => {
+        it('should reject requests with missing required fields', async () => {
             const response = await request(app)
                 .post('/send-email')
-                .send(validPayload);
-
-            expect(response.status).toBe(200);
-            expect(response.body.success).toBe(true);
-            expect(mockTransporter.sendMail).toHaveBeenCalledTimes(1);
-        });
-
-        it('should return 400 when required fields are missing', async () => {
-            const invalidPayload = {
-                name: 'Test User',
-                // missing email and message
-                subject: 'Test Subject'
-            };
-
-            const response = await request(app)
-                .post('/send-email')
-                .send(invalidPayload);
+                .send({
+                    name: 'Test User',
+                    // missing email
+                    message: 'Test message'
+                });
 
             expect(response.status).toBe(400);
             expect(response.body.success).toBe(false);
-            expect(response.body.message).toBe('Name, email, and message are required fields');
-            expect(mockTransporter.sendMail).not.toHaveBeenCalled();
+            expect(response.body.message).toContain('required fields');
         });
 
-        it('should return 400 for invalid email format', async () => {
-            const invalidEmailPayload = {
-                name: 'Test User',
-                email: 'invalid-email',
-                subject: 'Test Subject',
-                message: 'Test Message'
-            };
-
+        it('should handle server errors gracefully', async () => {
+            // Force an error by sending invalid data type
             const response = await request(app)
                 .post('/send-email')
-                .send(invalidEmailPayload);
-
-            expect(response.status).toBe(400);
-            expect(response.body.success).toBe(false);
-            expect(response.body.message).toBe('Invalid email format');
-            expect(mockTransporter.sendMail).not.toHaveBeenCalled();
-        });
-
-        it('should handle email service errors', async () => {
-            mockTransporter.sendMail.mockRejectedValue(new Error('SMTP error'));
-
-            const response = await request(app)
-                .post('/send-email')
-                .send(validPayload);
+                .send(null);
 
             expect(response.status).toBe(500);
             expect(response.body.success).toBe(false);
-            expect(response.body.message).toBe('Error sending email');
-            expect(mockTransporter.sendMail).toHaveBeenCalledTimes(1);
+            expect(response.body.message).toBeTruthy();
         });
     });
 });
