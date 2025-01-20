@@ -2,6 +2,7 @@ const express = require('express');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
 const path = require('path');
+const { isValidEmail } = require('./validation');
 require('dotenv').config();
 
 const app = express();
@@ -60,51 +61,39 @@ app.post('/send-email', async (req, res) => {
             });
         }
 
-        // Validate email format with strict rules
-        const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z]{2,})+$/;
-        if (!emailRegex.test(email)) {
+        // Validate email format
+        if (!isValidEmail(email)) {
             return res.status(400).json({ 
                 success: false, 
                 message: 'Invalid email format' 
             });
         }
         
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: process.env.EMAIL_USER,
-            subject: subject || `New message from ${name}`,
-            text: `From: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
-            html: `
-                <h3>New Contact Form Submission</h3>
-                <p><strong>Name:</strong> ${name}</p>
-                <p><strong>Email:</strong> ${email}</p>
-                <p><strong>Subject:</strong> ${subject || 'No subject'}</p>
-                <p><strong>Message:</strong></p>
-                <p>${message}</p>
-            `
-        };
-
-        console.log('Attempting to send email with config:', {
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: '****'
-            }
-        });
-        
-        await transporter.sendMail(mailOptions);
-        console.log('Email sent successfully');
-        res.json({ success: true, message: 'Email sent successfully!' });
+        try {
+            await transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: process.env.EMAIL_USER,
+                subject: `Contact Form Message from ${name}`,
+                text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
+                html: `<p><strong>Name:</strong> ${name}</p>
+                      <p><strong>Email:</strong> ${email}</p>
+                      <p><strong>Message:</strong> ${message}</p>`
+            });
+            
+            res.json({ success: true, message: 'Email sent successfully!' });
+        } catch (error) {
+            console.error('Error sending email:', error.message);
+            res.status(500).json({ 
+                success: false, 
+                message: 'Failed to send email',
+                error: error.message
+            });
+        }
     } catch (error) {
-        console.error('Detailed error sending email:', {
-            error: error.message,
-            code: error.code,
-            command: error.command,
-            responseCode: error.responseCode,
-            response: error.response
-        });
+        console.error('Request error:', error.message);
         res.status(500).json({ 
             success: false, 
-            message: 'Error sending email',
+            message: 'Server error',
             error: error.message
         });
     }

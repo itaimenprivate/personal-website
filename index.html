@@ -101,65 +101,12 @@
     <footer>
         <p>&copy; 2025 Itai Mendelsohn</p>
     </footer>
+    <script src="/validation.js"></script>
     <script>
-        const API_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:3000' 
-            : 'https://itai-test-site.onrender.com';
-
-        async function sendEmail(event) {
-            event.preventDefault();
-            
-            const submitBtn = document.getElementById('submit-btn');
-            const formStatus = document.getElementById('form-status');
-            const form = document.getElementById('contact-form');
-            
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = 'Sending...';
-            formStatus.innerHTML = '';
-            
-            try {
-                const response = await fetch(`${API_URL}/send-email`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        name: document.getElementById('name').value,
-                        email: document.getElementById('email').value,
-                        subject: document.getElementById('subject').value,
-                        message: document.getElementById('message').value
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    formStatus.innerHTML = '<div class="success-message">Message sent successfully!</div>';
-                    form.reset();
-                } else {
-                    throw new Error(result.message);
-                }
-            } catch (error) {
-                formStatus.innerHTML = '<div class="error-message">Failed to send message. Please try again.</div>';
-                console.error('Error:', error);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Send Message';
-            }
-            
-            return false;
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('contact-form');
             const emailInput = document.getElementById('email');
             
-            // Custom email validation function
-            function isValidEmail(email) {
-                const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z]{2,})+$/;
-                return emailRegex.test(email);
-            }
-
             // Add real-time validation feedback
             emailInput.addEventListener('input', function() {
                 if (!isValidEmail(this.value) && this.value) {

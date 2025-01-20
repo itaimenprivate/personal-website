@@ -2,24 +2,25 @@
  * @jest-environment jsdom
  */
 
+const fs = require('fs');
+const path = require('path');
+const { JSDOM } = require('jsdom');
+const { isValidEmail } = require('../validation');
+
 describe('Contact Form Functionality', () => {
+    let dom;
+    let document;
+    let window;
     let form;
     let submitButton;
     let fetchMock;
-    let isValidEmail;
 
     beforeEach(() => {
         // Set up our document body
-        document.body.innerHTML = `
-            <form id="contact-form">
-                <input type="text" id="name" name="name" required>
-                <input type="email" id="email" name="email" required>
-                <input type="text" id="subject" name="subject" required>
-                <textarea id="message" name="message" required></textarea>
-                <button type="submit" id="submit-btn">Send Message</button>
-                <div id="form-status"></div>
-            </form>
-        `;
+        const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
+        dom = new JSDOM(html, { runScripts: 'dangerously' });
+        document = dom.window.document;
+        window = dom.window;
 
         // Get form elements
         form = document.getElementById('contact-form');
@@ -60,12 +61,6 @@ describe('Contact Form Functionality', () => {
             }
             return false;
         });
-
-        // Extract the isValidEmail function from the script
-        isValidEmail = (email) => {
-            const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z]{2,})+$/;
-            return emailRegex.test(email);
-        };
     });
 
     afterEach(() => {
