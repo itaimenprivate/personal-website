@@ -11,10 +11,11 @@
     "test:ci": "jest --ci --coverage --reporters=default --reporters=jest-junit"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "nodemailer": "^6.9.7",
-    "dotenv": "^16.3.1",
-    "cors": "^2.8.5"
+    "punycode": "^2.3.1"
   },
   "devDependencies": {
     "jest": "^29.7.0",
@@ -24,7 +25,9 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "testMatch": ["**/tests/**/*.test.js"],
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
     "collectCoverageFrom": [
       "server.js",
       "public/**/*.js"

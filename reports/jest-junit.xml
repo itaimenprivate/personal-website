@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="43" failures="0" errors="0" time="1.013">
+  <testsuite name="tests/frontend.test.js" errors="0" failures="0" skipped="0" timestamp="2025-01-21T08:33:15" time="0.701" tests="21">
+    <testcase classname="Frontend Form Validation" name="should accept valid email format: user@domain.com" time="0.044">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should accept valid email format: user.name@domain.com" time="0.009">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should accept valid email format: user-name@domain.com" time="0.005">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should accept valid email format: user_name@domain.com" time="0.005">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should accept valid email format: user123@domain.com" time="0.005">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should accept valid email format: user@sub.domain.com" time="0.007">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should accept valid email format: user@domain.co.uk" time="0.004">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should reject invalid email format (starts with dot): .user@domain.com" time="0.005">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should reject invalid email format (ends with dot): user.@domain.com" time="0.009">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should reject invalid email format (dot after @): user@.domain.com" time="0.004">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should reject invalid email format (consecutive dots): user@domain..com" time="0.004">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should reject invalid email format (single-letter TLD): user@domain.c" time="0.004">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should reject invalid email format (numeric TLD): user@domain.123" time="0.003">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should reject invalid email format (domain starts with hyphen): user@-domain.com" time="0.005">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should reject invalid email format (domain ends with hyphen): user@domain-.com" time="0.006">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should reject invalid email format (missing username): @domain.com" time="0.003">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should reject invalid email format (missing domain): user@.com" time="0.003">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should reject invalid email format (missing @): user.domain.com" time="0.003">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should reject invalid email format (multiple @): user@@domain.com" time="0.003">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should reject invalid email format (missing TLD): user@domain" time="0.004">
+    </testcase>
+    <testcase classname="Frontend Form Validation" name="should prevent form submission with invalid email" time="0.003">
+    </testcase>
+  </testsuite>
+  <testsuite name="tests/server.test.js" errors="0" failures="0" skipped="0" timestamp="2025-01-21T08:33:16" time="0.274" tests="22">
+    <testcase classname="Email API Endpoints › POST /send-email" name="should accept valid email format: user@domain.com" time="0.022">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should accept valid email format: user.name@domain.com" time="0.003">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should accept valid email format: user-name@domain.com" time="0.001">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should accept valid email format: user_name@domain.com" time="0.001">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should accept valid email format: user123@domain.com" time="0.002">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should accept valid email format: user@sub.domain.com" time="0.001">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should accept valid email format: user@domain.co.uk" time="0.002">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should reject invalid email format (starts with dot): .user@domain.com" time="0.002">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should reject invalid email format (ends with dot): user.@domain.com" time="0.005">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should reject invalid email format (dot after @): user@.domain.com" time="0.002">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should reject invalid email format (consecutive dots): user@domain..com" time="0.002">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should reject invalid email format (single-letter TLD): user@domain.c" time="0.001">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should reject invalid email format (numeric TLD): user@domain.123" time="0.001">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should reject invalid email format (domain starts with hyphen): user@-domain.com" time="0.001">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should reject invalid email format (domain ends with hyphen): user@domain-.com" time="0.003">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should reject invalid email format (missing username): @domain.com" time="0.001">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should reject invalid email format (missing domain): user@.com" time="0.002">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should reject invalid email format (missing @): user.domain.com" time="0.001">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should reject invalid email format (multiple @): user@@domain.com" time="0.001">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should reject invalid email format (missing TLD): user@domain" time="0.001">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should reject requests with missing required fields" time="0.002">
+    </testcase>
+    <testcase classname="Email API Endpoints › POST /send-email" name="should handle email service errors" time="0.017">
+    </testcase>
+  </testsuite>
+</testsuites>
