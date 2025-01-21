@@ -33,50 +33,98 @@ jobs:
         EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
         NODE_ENV: test
 
-  deploy:
+  manage-deployment:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: always() # Run this job whether tests pass or fail
 
     steps:
-    - name: Deploy to Render
+    - name: Install jq
+      run: sudo apt-get install jq
+
+    - name: Cancel existing deployments
       env:
         RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
         RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
       run: |
-        # Cancel any existing deployments
-        curl -X GET "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys" \
-          -H "accept: application/json" \
-          -H "authorization: Bearer $RENDER_API_KEY" | \
-        jq -r '.[] | select(.status=="in_progress") | .id' | \
-        while read deploy_id; do
-          curl -X POST "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys/$deploy_id/cancel" \
+        # Function to cancel deployments
+        cancel_deployments() {
+          local response
+          response=$(curl -s -w "\n%{http_code}" -X GET "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys" \
             -H "accept: application/json" \
-            -H "authorization: Bearer $RENDER_API_KEY"
+            -H "authorization: Bearer $RENDER_API_KEY")
+          
+          local http_code
+          http_code=$(echo "$response" | tail -n1)
+          local body
+          body=$(echo "$response" | sed '$d')
+          
+          if [ "$http_code" != "200" ]; then
+            echo "Failed to get deployments. HTTP code: $http_code"
+            echo "Response: $body"
+            return 1
+          fi
+          
+          echo "$body" | \
+          jq -r '.[] | select(.status=="in_progress") | .id' | \
+          while read -r deploy_id; do
+            if [ -n "$deploy_id" ]; then
+              echo "Cancelling deployment $deploy_id"
+              local cancel_response
+              cancel_response=$(curl -s -w "\n%{http_code}" -X POST \
+                "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys/$deploy_id/cancel" \
+                -H "accept: application/json" \
+                -H "authorization: Bearer $RENDER_API_KEY")
+              
+              local cancel_code
+              cancel_code=$(echo "$cancel_response" | tail -n1)
+              local cancel_body
+              cancel_body=$(echo "$cancel_response" | sed '$d')
+              
+              if [ "$cancel_code" != "200" ]; then
+                echo "Failed to cancel deployment $deploy_id. HTTP code: $cancel_code"
+                echo "Response: $cancel_body"
+                return 1
+              fi
+              echo "Successfully cancelled deployment $deploy_id"
+            fi
+          done
+        }
+        
+        # Try to cancel deployments, retry up to 3 times if it fails
+        max_attempts=3
+        attempt=1
+        while [ $attempt -le $max_attempts ]; do
+          if cancel_deployments; then
+            break
+          fi
+          echo "Attempt $attempt failed. Retrying in 5 seconds..."
+          sleep 5
+          attempt=$((attempt + 1))
         done
         
-        # Trigger new deployment
-        curl -X POST "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys" \
-          -H "accept: application/json" \
-          -H "authorization: Bearer $RENDER_API_KEY"
+        if [ $attempt -gt $max_attempts ]; then
+          echo "Failed to cancel deployments after $max_attempts attempts"
+          exit 1
+        fi
 
-  cancel-pending:
-    needs: [test]
-    if: failure()
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Cancel Pending Deployments
+    - name: Trigger new deployment
+      if: needs.test.result == 'success' && github.ref == 'refs/heads/main'
       env:
         RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
         RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
       run: |
-        curl -X GET "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys" \
+        response=$(curl -s -w "\n%{http_code}" -X POST \
+          "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys" \
           -H "accept: application/json" \
-          -H "authorization: Bearer $RENDER_API_KEY" | \
-        jq -r '.[] | select(.status=="in_progress") | .id' | \
-        while read deploy_id; do
-          curl -X POST "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys/$deploy_id/cancel" \
-            -H "accept: application/json" \
-            -H "authorization: Bearer $RENDER_API_KEY"
-        done
+          -H "authorization: Bearer $RENDER_API_KEY")
+        
+        http_code=$(echo "$response" | tail -n1)
+        body=$(echo "$response" | sed '$d')
+        
+        if [ "$http_code" != "201" ]; then
+          echo "Failed to trigger deployment. HTTP code: $http_code"
+          echo "Response: $body"
+          exit 1
+        fi
+        echo "Successfully triggered new deployment"
